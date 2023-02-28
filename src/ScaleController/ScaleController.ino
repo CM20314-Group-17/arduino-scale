@@ -1,5 +1,11 @@
 #include <LiquidCrystal_I2C.h>
 #include <string.h>
+#include <Wire.h>
+#include <PN532_I2C.h>
+#include <PN532.h>
+#include <NfcAdapter.h>
+
+
 byte gbpSign[8] = {
 	0b00110,
 	0b01001,
@@ -15,6 +21,9 @@ LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x3F for a 16 chars
 // button setup
 int zero_pin = 2;
 int right_pin = 4;
+
+//NFC SETUP
+
 
 //Environment variables
 char current_name_code[12];
@@ -48,11 +57,16 @@ void setup() {
   //Variable initalisation
   strcpy(current_name_code, "NAME  CODE  ");
 
+  //NFC
+  nfc.begin();
+
 
 }
 
 void loop() {
   writelcd();
+  readNFC();
+}
 }
 
 void writelcd(){
@@ -155,4 +169,42 @@ void item_before(){
 
 void delete_item(){
   //delete current item
+}
+
+
+void readNFC() {
+  if (nfc.tagPresent()) {
+    NfcTag tag = nfc.read();
+    if (tag.hasNdefMessage()) {
+
+      //based on https://github.com/don/NDEF/blob/master/examples/ReadTagExtended/ReadTagExtended.ino#L68-L75, Don Coleman - 08/2013 accesed: 26/02/2023
+      NdefMessage message = tag.getNdefMessage();
+      NdefRecord record = message.getRecord(0);  //todo change this if we have more than one record?
+      int payloadLength = record.getPayloadLength();
+      byte payload[payloadLength];
+      record.getPayload(payload);
+      String current_thing = "";
+      int current = 0;  //current value we are editing
+      for (int x = 3; x < payloadLength; x++) {
+        if ((char)payload[x] == '_') {
+          if (current == 0) {
+            current_portions = atof(current_thing);
+          }
+          if (current == 1) {
+            current_price = atof(current_thing);
+          }
+          if (current == 2) {
+            strcpy(current_name_code,current_thing);
+          }
+          current_thing = "";
+          current ++;
+        }
+      else{
+          current_thing += (char)payload[x];        
+      }
+      }
+
+
+    }
+  }
 }
