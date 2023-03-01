@@ -44,7 +44,7 @@ void setup() {
   lcd.init();
   lcd.clear();         
   lcd.backlight();     
-  lcd.createChar(0, gbpSign);
+  //lcd.createChar(3, gbpSign);
  
 
   //BUTTONS
@@ -55,7 +55,7 @@ void setup() {
   
 
   //Variable initalisation
-  strcpy(current_name_code, "NAME  CODE ");
+  strcpy(current_name_code, "NAME  CODE  ");
 
   //NFC
   nfc.begin();
@@ -84,9 +84,8 @@ void writelcd(){
   lcd.print(output_value);
   lcd.setCursor(0,2);
 
-  //pound sign dosen't working using placehodler, implement custom pound sign here??
   lcd.print("Price:");
-  lcd.write(byte(0));
+  //lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT PRICE
   dtostrf(current_price,5,2,output_value);
@@ -94,7 +93,7 @@ void writelcd(){
 
   lcd.setCursor(0,3);
   lcd.print("Total:");
-  lcd.write(byte(0));
+  //lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT TOTAL
   dtostrf(total,5,2,output_value);
@@ -180,12 +179,13 @@ void readNFC() {
       byte payload[payloadLength];
       record.getPayload(payload);
       String current_thing = "";
-      char characterbuffer[12];
+      char characterbuffer[13];
       
       int current = 0;  //current value we are editing
-      for (int x = 3; x < payloadLength; x++) {
+      for (int x = 3; x < (payloadLength); x++) {
         if ((char)payload[x] == '_') {
-          current_thing.toCharArray(characterbuffer, 12);
+          characterbuffer;
+          current_thing.toCharArray(characterbuffer, 13);
           if (current == 0) {
             
             current_portions = atof(characterbuffer);
