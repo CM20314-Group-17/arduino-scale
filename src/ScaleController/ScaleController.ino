@@ -17,16 +17,18 @@ byte gbpSign[8] = {
 	0b11111
 };
 // LCD SETUP
-LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
+LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
 // button setup
 int zero_pin = 2;
 int right_pin = 4;
 
 //NFC SETUP
+PN532_I2C pn532_i2c(Wire);
+NfcAdapter nfc = NfcAdapter(pn532_i2c);
 
 
 //Environment variables
-char current_name_code[12];
+char current_name_code[13];
 float current_price; //price per_kg
 float current_portions; //portions per_kg
 float weight_bias = 0;  //Set when we zero, then take away from all weight measurements
@@ -51,11 +53,13 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(2), zero_it, RISING);
   pinMode(4,INPUT);
   attachInterrupt(digitalPinToInterrupt(3),next_item, RISING);
+  
   //NFC STUFF
+   nfc.begin();
 
 
   //Variable initalisation
-  strcpy(current_name_code, "NAME  CODE  ");
+  strcpy(current_name_code, "NAME  CODE ");
 
   //NFC
   nfc.begin();
@@ -67,7 +71,7 @@ void loop() {
   writelcd();
   readNFC();
 }
-}
+
 
 void writelcd(){
   lcd.setCursor(0,0); //character x on line y
@@ -184,17 +188,21 @@ void readNFC() {
       byte payload[payloadLength];
       record.getPayload(payload);
       String current_thing = "";
+      char characterbuffer[12];
+      
       int current = 0;  //current value we are editing
       for (int x = 3; x < payloadLength; x++) {
         if ((char)payload[x] == '_') {
+          current_thing.toCharArray(characterbuffer, 12);
           if (current == 0) {
-            current_portions = atof(current_thing);
+            
+            current_portions = atof(characterbuffer);
           }
           if (current == 1) {
-            current_price = atof(current_thing);
+            current_price = atof(characterbuffer);
           }
           if (current == 2) {
-            strcpy(current_name_code,current_thing);
+            strcpy(current_name_code,characterbuffer);
           }
           current_thing = "";
           current ++;
