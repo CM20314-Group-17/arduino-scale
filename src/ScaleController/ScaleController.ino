@@ -146,15 +146,15 @@ int current_weight(){
 
 void next_item() {
   //move to the right
-  if ((millis() - debounce_time_right) > 300){ //might need to change this based on physical config
+  if ((millis() - debounce_time_right) > 150){ //might need to change this based on physical config
     prices[this_item] = current_price;
     //check if we are at last item
     if (this_item < 32){
       this_item++;
       strcpy(current_name_code, "SELECTITEM  ");
       total = total + current_price;
-      current_price = 0;
-      current_portions = 0;
+      current_price = 0.0;
+      current_portions = 0.0;
     }
     debounce_time_right = millis();
   
