@@ -1,4 +1,4 @@
-#include <LiquidCrystal_I2C.h>
+  #include <LiquidCrystal_I2C.h>
 #include <string.h>
 #include <PN532.h>
 #include <PN532_SPI.h>
@@ -141,11 +141,6 @@ int current_weight(){
   //
 }
 
-void read_nfc(){
-  //GET VALUE FROM NFC
-  char input[] = "NAME CODE"; // TODO GET VALUE FROM NFC
-  strcpy(current_name_code, input);
-}
 
 void next_item() {
   //move to the right
