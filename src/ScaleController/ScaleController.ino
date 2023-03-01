@@ -1,8 +1,7 @@
 #include <LiquidCrystal_I2C.h>
 #include <string.h>
-#include <Wire.h>
-#include <PN532_I2C.h>
 #include <PN532.h>
+#include <PN532_SPI.h>
 #include <NfcAdapter.h>
 
 
@@ -23,8 +22,8 @@ int zero_pin = 2;
 int right_pin = 4;
 
 //NFC SETUP
-PN532_I2C pn532_i2c(Wire);
-NfcAdapter nfc = NfcAdapter(pn532_i2c);
+PN532_SPI interface(SPI, 10); 
+NfcAdapter nfc = NfcAdapter(interface); 
 
 
 //Environment variables
@@ -54,9 +53,6 @@ void setup() {
   pinMode(4,INPUT);
   attachInterrupt(digitalPinToInterrupt(3),next_item, RISING);
   
-  //NFC STUFF
-   nfc.begin();
-
 
   //Variable initalisation
   strcpy(current_name_code, "NAME  CODE ");
@@ -179,6 +175,7 @@ void delete_item(){
 void readNFC() {
   if (nfc.tagPresent()) {
     NfcTag tag = nfc.read();
+    
     if (tag.hasNdefMessage()) {
 
       //based on https://github.com/don/NDEF/blob/master/examples/ReadTagExtended/ReadTagExtended.ino#L68-L75, Don Coleman - 08/2013 accesed: 26/02/2023
