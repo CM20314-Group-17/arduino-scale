@@ -4,7 +4,6 @@
 #include <PN532_SPI.h>
 #include <NfcAdapter.h>
 
-
 byte gbpSign[8] = {
 	0b00110,
 	0b01001,
@@ -19,7 +18,7 @@ byte gbpSign[8] = {
 LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
 // button setup
 int zero_pin = 2;
-int right_pin = 4;
+int right_pin = 3;
 
 //NFC SETUP
 PN532_SPI interface(SPI, 10); 
@@ -48,11 +47,11 @@ void setup() {
  
 
   //BUTTONS
-  pinMode(2, INPUT);
-  attachInterrupt(digitalPinToInterrupt(2), zero_it, FALLING);
-  pinMode(4,INPUT);
-  attachInterrupt(digitalPinToInterrupt(3),next_item, FALLING);
-  
+  pinMode(zero_pin, INPUT);
+  attachInterrupt(digitalPinToInterrupt(zero_pin), zero_it, RISING);
+  pinMode(right_pin,INPUT);
+  attachInterrupt(digitalPinToInterrupt(right_pin),next_item, RISING);
+
 
   //Variable initalisation
   strcpy(current_name_code, "NAME  CODE  ");
@@ -147,13 +146,15 @@ int current_weight(){
 
 void next_item() {
   //move to the right
-  if ((millis() - debounce_time_right) > 20){ //might need to change this based on physical config
+  if ((millis() - debounce_time_right) > 300){ //might need to change this based on physical config
     prices[this_item] = current_price;
     //check if we are at last item
     if (this_item < 32){
       this_item++;
       strcpy(current_name_code, "SELECTITEM  ");
       total = total + current_price;
+      current_price = 0;
+      current_portions = 0;
     }
     debounce_time_right = millis();
   
