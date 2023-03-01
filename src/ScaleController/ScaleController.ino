@@ -44,14 +44,14 @@ void setup() {
   lcd.init();
   lcd.clear();         
   lcd.backlight();     
-  //lcd.createChar(3, gbpSign);
+  lcd.createChar(3, gbpSign);
  
 
   //BUTTONS
   pinMode(2, INPUT);
-  attachInterrupt(digitalPinToInterrupt(2), zero_it, RISING);
+  attachInterrupt(digitalPinToInterrupt(2), zero_it, FALLING);
   pinMode(4,INPUT);
-  attachInterrupt(digitalPinToInterrupt(3),next_item, RISING);
+  attachInterrupt(digitalPinToInterrupt(3),next_item, FALLING);
   
 
   //Variable initalisation
@@ -70,6 +70,8 @@ void loop() {
 
 
 void writelcd(){
+
+  //Weight
   lcd.setCursor(0,0); //character x on line y
   lcd.print("Weight: ");
   //FORMAT WEIGHT
@@ -77,6 +79,7 @@ void writelcd(){
   dtostrf(current_weight(),5,2,output_value);
   lcd.print(output_value);
 
+  //Portions
   lcd.setCursor(0,1);
   lcd.print("Portion:");
   //FORMAT PORTIONS
@@ -85,7 +88,7 @@ void writelcd(){
   lcd.setCursor(0,2);
 
   lcd.print("Price:");
-  //lcd.write(byte(3));
+  lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT PRICE
   dtostrf(current_price,5,2,output_value);
@@ -93,7 +96,7 @@ void writelcd(){
 
   lcd.setCursor(0,3);
   lcd.print("Total:");
-  //lcd.write(byte(3));
+  lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT TOTAL
   dtostrf(total,5,2,output_value);
@@ -113,6 +116,7 @@ void writelcd(){
       lcd.print(current_name_code[x]);
     }
   }
+  
   //AMOUNT THROUGH
   lcd.setCursor(14,3);
   if (this_item < 10){
@@ -143,7 +147,7 @@ int current_weight(){
 
 void next_item() {
   //move to the right
-  if ((millis() - debounce_time_right) > 1000){ //might need to change this based on physical config
+  if ((millis() - debounce_time_right) > 20){ //might need to change this based on physical config
     prices[this_item] = current_price;
     //check if we are at last item
     if (this_item < 32){
@@ -173,8 +177,10 @@ void readNFC() {
     if (tag.hasNdefMessage()) {
 
       //based on https://github.com/don/NDEF/blob/master/examples/ReadTagExtended/ReadTagExtended.ino#L68-L75, Don Coleman - 08/2013 accesed: 26/02/2023
+      //get messages
       NdefMessage message = tag.getNdefMessage();
       NdefRecord record = message.getRecord(0);  //todo change this if we have more than one record?
+      //get length of message and set variables
       int payloadLength = record.getPayloadLength();
       byte payload[payloadLength];
       record.getPayload(payload);
@@ -182,6 +188,7 @@ void readNFC() {
       char characterbuffer[13];
       
       int current = 0;  //current value we are editing
+      //This goes through each value, portions, price, name code and sets the values  
       for (int x = 3; x < (payloadLength); x++) {
         if ((char)payload[x] == '_') {
           characterbuffer;
