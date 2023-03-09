@@ -1,9 +1,21 @@
-  #include <LiquidCrystal_I2C.h>
+#include <LiquidCrystal_I2C.h>
 #include <string.h>
 #include <PN532.h>
 #include <PN532_SPI.h>
 #include <NfcAdapter.h>
+#include <Scale.h>
 
+// LCD SETUP
+LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
+
+// SCALE
+Scale scale(6, 5);
+
+// CONSTANTS
+const int NAMECODE_LENGTH = 13;
+const int ZERO_PIN = 2;
+const int RIGHT_PIN = 3;
+const int DEBOUNCE_TIME = 150;
 byte gbpSign[8] = {
 	0b00110,
 	0b01001,
@@ -14,11 +26,7 @@ byte gbpSign[8] = {
 	0b01000,
 	0b11111
 };
-// LCD SETUP
-LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
-// button setup
-int zero_pin = 2;
-int right_pin = 3;
+
 
 //NFC SETUP
 PN532_SPI interface(SPI, 10); 
@@ -26,13 +34,14 @@ NfcAdapter nfc = NfcAdapter(interface);
 
 
 //Environment variables
-char current_name_code[13];
+char current_name_code[NAMECODE_LENGTH];
 float current_price; //price per_kg
 float current_portions; //portions per_kg
 float weight_bias = 0;  //Set when we zero, then take away from all weight measurements
 int this_item = 0;
 int prices[32];
 float total;
+
 
 unsigned long debounce_time_right = 0; //Long because we need space to store millis
 unsigned long debounce_time_zero = 0; // ^^ 
@@ -47,10 +56,10 @@ void setup() {
  
 
   //BUTTONS
-  pinMode(zero_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(zero_pin), zero_it, RISING);
-  pinMode(right_pin,INPUT);
-  attachInterrupt(digitalPinToInterrupt(right_pin),next_item, RISING);
+  pinMode(ZERO_PIN, INPUT);
+  attachInterrupt(digitalPinToInterrupt(ZERO_PIN), zero_it, RISING);
+  pinMode(RIGHT_PIN,INPUT);
+  attachInterrupt(digitalPinToInterrupt(RIGHT_PIN),next_item, RISING);
 
 
   //Variable initalisation
@@ -59,12 +68,34 @@ void setup() {
   //NFC
   nfc.begin();
 
+  // START HX711 AND DO TARE
+  lcd.setCursor(3, 0);
+  lcd.print("Taring");
+  delay(100);
+  lcd.setCursor(9, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(10, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(11, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(12, 0);
+  lcd.print(".");
+  delay(100);
+
+  scale.begin();
+  
+  lcd.clear();
 
 }
 
 void loop() {
   writelcd();
   readNFC();
+  scale.setPortionsPerKG(current_portions);
+  scale.setPricePerKG(current_price);
 }
 
 
@@ -103,7 +134,7 @@ void writelcd(){
 
   //Name code
   lcd.setCursor(14,0);
-  for (int x  =0; x < 12; x ++){
+  for (int x  =0; x < NAMECODE_LENGTH-1; x ++){
     if (x < 6){
       lcd.print(current_name_code[x]);
     }
@@ -140,13 +171,13 @@ void zero_it() {
 }
 
 int current_weight(){
-  //
+  return (int)scale.getTotalWeight(); // scale resolution is less than a gram so returns float. should we round to int?
 }
 
 
 void next_item() {
   //move to the right
-  if ((millis() - debounce_time_right) > 150){ //might need to change this based on physical config
+  if ((millis() - debounce_time_right) > DEBOUNCE_TIME){ //might need to change this based on physical config
     prices[this_item] = current_price;
     //check if we are at last item
     if (this_item < 32){
@@ -186,14 +217,14 @@ void readNFC() {
       byte payload[payloadLength];
       record.getPayload(payload);
       String current_thing = "";
-      char characterbuffer[13];
+      char characterbuffer[NAMECODE_LENGTH];
       
       int current = 0;  //current value we are editing
       //This goes through each value, portions, price, name code and sets the values  
       for (int x = 3; x < (payloadLength); x++) {
         if ((char)payload[x] == '_') {
           characterbuffer;
-          current_thing.toCharArray(characterbuffer, 13);
+          current_thing.toCharArray(characterbuffer, NAMECODE_LENGTH);
           if (current == 0) {
             
             current_portions = atof(characterbuffer);

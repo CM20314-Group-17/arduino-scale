@@ -14,10 +14,10 @@ class Scale
     float getTotalPrice();            // get price of detected weight
     float getTotalPortions();         // get portions in detected weight
 
-    void setPortionSize(float grams); // specify portion size to use for calculations
-    float getPortionSize();           // get portion size currently being used for calculations
-    void setPricePerGram(float pricePerGram); // specify price per gram to use for calculations
-    float getPricePerGram();                  // get price per gram currently being used for calculations
+    void setPortionsPerKG(float portions); // specify portion size to use for calculations
+    float getPortionsPerKG();           // get portion size currently being used for calculations
+    void setPricePerKG(float price); // specify price per gram to use for calculations
+    float getPricePerKG();                  // get price per gram currently being used for calculations
 
     void tare();                      // blocking tare
     void tareNoDelay();               // nonblocking tare
@@ -26,10 +26,10 @@ class Scale
   private:
     HX711_ADC* LoadCell;
     const float GRAMS_PER_OZ = 28.3495;
-    int DEFAULT_INIT_TIME = 1000;
-    float DEFAULT_CAL_FACTOR = 0.42;
-    float currentPortionSize = 1.0;
-    float currentPricePerGram = 1.0;
+    const int DEFAULT_INIT_TIME = 1000;
+    const float DEFAULT_CAL_FACTOR = 0.42;
+    float currentPortionsPerKG = 1.0;
+    float currentPricePerKG = 1.0;
 };
 
 #endif

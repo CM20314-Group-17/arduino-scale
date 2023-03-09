@@ -37,32 +37,32 @@ float Scale::getTotalWeight()
   return LoadCell->getData();
 }
 
-void Scale::setPortionSize(float grams)
+void Scale::setPortionsPerKG(float portions)
 {
-  currentPortionSize = grams;
+  currentPortionsPerKG = portions;
 }
 
-float Scale::getPortionSize()
+float Scale::getPortionsPerKG()
 {
-  return currentPortionSize;
+  return currentPortionsPerKG;
 }
 
-void Scale::setPricePerGram(float pricePerGram)
+void Scale::setPricePerKG(float price)
 {
-  currentPricePerGram = pricePerGram;
+  currentPricePerKG = price;
 }
 
-float Scale::getPricePerGram()
+float Scale::getPricePerKG()
 {
-  return currentPricePerGram;
+  return currentPricePerKG;
 }
 
 float Scale::getTotalPrice()
 {
-  return getTotalWeight() * getPricePerGram();
+  return getTotalWeight() * getPricePerKG() / 1000.0;
 }
 
 float Scale::getTotalPortions()
 {
-  return getTotalWeight() * getPortionSize();
+  return getTotalWeight() * getPortionsPerKG() / 1000.0;
 }
