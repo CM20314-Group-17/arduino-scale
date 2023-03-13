@@ -33,8 +33,7 @@ bool Scale::getTareStatus() {
 
 float Scale::getTotalWeight()
 {
-  LoadCell->update();
-  return LoadCell->getData();
+  return 0.5;
 }
 
 void Scale::setPortionsPerKG(float portions)

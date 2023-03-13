@@ -8,6 +8,9 @@
 
 
 
+
+
+
 // LCD SETUP
 LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
 
@@ -95,6 +98,29 @@ void setup() {
 void loop() {
   writelcd();
   readNFC();
+}
+
+
+test(portions){
+  Scale.setPortionsPerKG(50);
+  assertEqual(Scale.getPortionsPerKG(),50)  
+  assertEqual(Scale.getTotalPortions(),25)  
+  Scale.setPortionsPerKG(100);
+  assertEqual(Scale.getPortionsPerKG(),100)  
+  assertEqual(Scale.getTotalPortions(),50)  
+}
+
+test(price){
+  Scale.setPricePerKG(50);
+  assertEqual(Scale.getPricePerKG(),50)
+  assertEqual(Scale.getTotalPrice(),25)
+  Scale.setPricePerKG(100);
+  assertEqual(Scale.getPricePerKG(),100)
+  assertEqual(Scale.getTotalPrice(),50)    
+}
+
+test(weight){
+  assertEqual(Scale.getTotalWeight(),500)
 }
 
 void writelcd(){
