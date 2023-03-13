@@ -10,7 +10,6 @@
 
 
 
-
 // LCD SETUP
 LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
 
@@ -52,6 +51,8 @@ unsigned long debounce_time_zero = 0; // ^^
 
 
 void setup() {
+  Serial.begin(9600); // ESP8266 default of 74880 not supported on Linux
+
   //LCD STUFF
   lcd.init();
   lcd.clear();         
@@ -98,6 +99,7 @@ void setup() {
 void loop() {
   writelcd();
   readNFC();
+  aunit::TestRunner::run();
 }
 
 
