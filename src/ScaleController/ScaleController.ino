@@ -4,6 +4,9 @@
 #include <PN532_SPI.h>
 #include <NfcAdapter.h>
 #include <Scale.h>
+#include <AUnit.h>
+
+
 
 // LCD SETUP
 LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
@@ -35,8 +38,6 @@ NfcAdapter nfc = NfcAdapter(interface);
 
 //Environment variables
 char current_name_code[NAMECODE_LENGTH];
-float current_price; //price per_kg
-float current_portions; //portions per_kg
 float weight_bias = 0;  //Set when we zero, then take away from all weight measurements
 int this_item = 0;
 int prices[32];
@@ -94,10 +95,7 @@ void setup() {
 void loop() {
   writelcd();
   readNFC();
-  scale.setPortionsPerKG(current_portions);
-  scale.setPricePerKG(current_price);
 }
-
 
 void writelcd(){
 
@@ -113,7 +111,7 @@ void writelcd(){
   lcd.setCursor(0,1);
   lcd.print("Portion:");
   //FORMAT PORTIONS
-  dtostrf(current_portions,5,2,output_value);
+  dtostrf(scale.getPricePerKG(),current_portions),5,2,output_value);
   lcd.print(output_value);
   lcd.setCursor(0,2);
 
@@ -121,7 +119,7 @@ void writelcd(){
   lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT PRICE
-  dtostrf(current_price,5,2,output_value);
+  dtostrf(scale.getTotalPricePerKG()),5,2,output_value);
   lcd.print(output_value);
 
   lcd.setCursor(0,3);
@@ -156,6 +154,8 @@ void writelcd(){
   lcd.print("/");
   lcd.print("32");
 }
+
+
 
 
 void zero_it() {
@@ -193,6 +193,7 @@ void next_item() {
 }
 
 
+
 void item_before(){
   //go back
 }
@@ -225,12 +226,13 @@ void readNFC() {
         if ((char)payload[x] == '_') {
           characterbuffer;
           current_thing.toCharArray(characterbuffer, NAMECODE_LENGTH);
-          if (current == 0) {
-            
-            current_portions = atof(characterbuffer);
+          if (current == 0) { 
+            scale.setPortionsPerKG( atof(characterbuffer));
+}
           }
           if (current == 1) {
-            current_price = atof(characterbuffer);
+            scale.setPricePerKG(atof(characterbuffer));
+
           }
           if (current == 2) {
             strcpy(current_name_code,characterbuffer);
