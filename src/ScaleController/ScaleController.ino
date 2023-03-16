@@ -106,7 +106,7 @@ void writelcd(){
   lcd.print("Weight: ");
   //FORMAT WEIGHT
   char output_value[5]; 
-  dtostrf(current_weight(),5,2,output_value);
+  dtostrf(current_weight(),5,0,output_value);
   lcd.print(output_value);
 
   //Portions
