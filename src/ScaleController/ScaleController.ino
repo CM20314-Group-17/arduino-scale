@@ -9,14 +9,14 @@
 LiquidCrystal_I2C lcd(0x3F,20,4);  // set the LCD address to 0x3F for a 16 chars and 2 line display
 
 // SCALE
-Scale scale(6, 5);
+Scale scale(5, 6);
 
 // CONSTANTS
 const int NAMECODE_LENGTH = 13;
 const int ZERO_PIN = 2;
 const int RIGHT_PIN = 3;
 const int DEBOUNCE_TIME = 100;
-const int NFC_READ_FREQUENCY = 20;  // do nfc read every this many loops as it's very slow
+const int NFC_READ_FREQUENCY = 30;  // do nfc read every this many loops as it's very slow
 const int TARE_COOLDOWN = 15; // loops until you can tare again
 byte gbpSign[8] = {
 	0b00110,
@@ -57,7 +57,6 @@ void setup() {
   lcd.clear();         
   lcd.backlight();     
   lcd.createChar(3, gbpSign);
- 
 
   //BUTTONS
   pinMode(ZERO_PIN, INPUT);
@@ -75,7 +74,7 @@ void setup() {
   // START HX711 AND DO TARE
   displayTaringSequence();
 
-  scale.begin();
+  scale.begin(102.7);
   
   lcd.clear();
 }
@@ -123,30 +122,34 @@ void writelcd(){
   lcd.print("Weight: ");
   //FORMAT WEIGHT
   char output_value[5]; 
-  dtostrf(current_weight(),5,2,output_value);
+  int weight = (int)current_weight();
+  //if (abs(weight) < 1.0) weight = 0;  // little cheat to smooth out weight
+  dtostrf(weight,4,0,output_value);
   lcd.print(output_value);
+  lcd.print("g");
 
   //Portions
   lcd.setCursor(0,1);
-  lcd.print("Portion:");
+  lcd.print("Portns:");
   //FORMAT PORTIONS
-  dtostrf(current_portions,5,2,output_value);
+  dtostrf(current_portions * weight,6,1,output_value);
   lcd.print(output_value);
   lcd.setCursor(0,2);
 
   lcd.print("Price:");
   lcd.write(byte(3));
-  lcd.print(" ");
+  //lcd.print(" ");
   //FORMAT PRICE
-  dtostrf(/*current_price*/(int)digitalRead(RIGHT_PIN),5,2,output_value);
+  float price = current_price * weight;
+  dtostrf(price,6,2,output_value);
   lcd.print(output_value);
 
   lcd.setCursor(0,3);
   lcd.print("Total:");
   lcd.write(byte(3));
-  lcd.print(" ");
+  //lcd.print(" ");
   //FORMAT TOTAL
-  dtostrf(/*total*/(int)digitalRead(ZERO_PIN),5,2,output_value);
+  dtostrf(total,6,2,output_value);
   lcd.print(output_value);
 
   //Name code
@@ -188,8 +191,9 @@ void zero_it() {
   }
 }
 
-int current_weight(){
-  return (int)scale.getTotalWeight(); // scale resolution is less than a gram so returns float. should we round to int?
+float current_weight(){
+  float w = scale.getTotalWeight();
+  return w;
 }
 
 
@@ -201,7 +205,7 @@ void next_item() {
     if (this_item < 32){
       this_item++;
       strcpy(current_name_code, "SELECTITEM  ");
-      total = total + current_price;
+      total = total + current_price * (int)current_weight();
       current_price = 0.0;
       current_portions = 0.0;
     }
@@ -255,13 +259,10 @@ void readNFC() {
           }
           current_thing = "";
           current ++;
-        }
-      else{
+        } else {
           current_thing += (char)payload[x];        
+        }
       }
-      }
-
-
     }
   }
 }
