@@ -15,7 +15,9 @@ Scale scale(6, 5);
 const int NAMECODE_LENGTH = 13;
 const int ZERO_PIN = 2;
 const int RIGHT_PIN = 3;
-const int DEBOUNCE_TIME = 150;
+const int DEBOUNCE_TIME = 100;
+const int NFC_READ_FREQUENCY = 20;  // do nfc read every this many loops as it's very slow
+const int TARE_COOLDOWN = 15; // loops until you can tare again
 byte gbpSign[8] = {
 	0b00110,
 	0b01001,
@@ -39,6 +41,8 @@ float current_price; //price per_kg
 float current_portions; //portions per_kg
 float weight_bias = 0;  //Set when we zero, then take away from all weight measurements
 int this_item = 0;
+int nfc_read_timer = 0; // timer for when nfc read is called
+int tare_timer = 0;
 int prices[32];
 float total;
 
@@ -57,7 +61,7 @@ void setup() {
 
   //BUTTONS
   pinMode(ZERO_PIN, INPUT);
-  attachInterrupt(digitalPinToInterrupt(ZERO_PIN), zero_it, RISING);
+  // zeroing the scale during an interrupt does not work - now it just simply checks the button in loop()
   pinMode(RIGHT_PIN,INPUT);
   attachInterrupt(digitalPinToInterrupt(RIGHT_PIN),next_item, RISING);
 
@@ -65,37 +69,50 @@ void setup() {
   //Variable initalisation
   strcpy(current_name_code, "NAME  CODE  ");
 
-  //NFC
+  //NFClcd.setCursor(3, 0);
   nfc.begin();
 
   // START HX711 AND DO TARE
-  lcd.setCursor(3, 0);
-  lcd.print("Taring");
-  delay(100);
-  lcd.setCursor(9, 0);
-  lcd.print(".");
-  delay(100);
-  lcd.setCursor(10, 0);
-  lcd.print(".");
-  delay(100);
-  lcd.setCursor(11, 0);
-  lcd.print(".");
-  delay(100);
-  lcd.setCursor(12, 0);
-  lcd.print(".");
-  delay(100);
+  displayTaringSequence();
 
   scale.begin();
   
   lcd.clear();
-
 }
 
 void loop() {
   writelcd();
-  readNFC();
+  readZeroButtonLoop();
+  readNFCLoop();
   scale.setPortionsPerKG(current_portions);
   scale.setPricePerKG(current_price);
+}
+
+void readNFCLoop() {
+  if (nfc_read_timer == 0) {  
+    readNFC();
+    nfc_read_timer = NFC_READ_FREQUENCY;
+  }
+  nfc_read_timer--;
+}
+
+void readZeroButtonLoop() {
+  if (tare_timer == 0) {
+    if (digitalRead(ZERO_PIN) == HIGH) {
+      tare();
+      tare_timer = TARE_COOLDOWN;
+    }
+  } else {
+    tare_timer--;
+  }
+}
+
+void tare() {
+  displayTaringSequence();
+
+  scale.tare();
+
+  lcd.clear();
 }
 
 
@@ -121,7 +138,7 @@ void writelcd(){
   lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT PRICE
-  dtostrf(current_price,5,2,output_value);
+  dtostrf(/*current_price*/(int)digitalRead(RIGHT_PIN),5,2,output_value);
   lcd.print(output_value);
 
   lcd.setCursor(0,3);
@@ -129,7 +146,7 @@ void writelcd(){
   lcd.write(byte(3));
   lcd.print(" ");
   //FORMAT TOTAL
-  dtostrf(total,5,2,output_value);
+  dtostrf(/*total*/(int)digitalRead(ZERO_PIN),5,2,output_value);
   lcd.print(output_value);
 
   //Name code
@@ -167,6 +184,7 @@ void zero_it() {
       weight_bias = weight;
     }
     debounce_time_right = millis();
+    //tare();
   }
 }
 
@@ -246,4 +264,23 @@ void readNFC() {
 
     }
   }
+}
+
+void displayTaringSequence() {
+  lcd.clear();
+  lcd.setCursor(3, 0);
+  lcd.print("Zeroing");
+  delay(100);
+  lcd.setCursor(10, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(11, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(12, 0);
+  lcd.print(".");
+  delay(100);
+  lcd.setCursor(13, 0);
+  lcd.print(".");
+  delay(100);
 }
