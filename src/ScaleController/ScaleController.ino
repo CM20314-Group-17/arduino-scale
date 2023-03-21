@@ -120,7 +120,7 @@ void writelcd() {
   char output_value[5];
   int weight = scale.getTotalWeight();
   //if (abs(weight) < 1.0) weight = 0;  // little cheat to smooth out weight
-  dtostrf(abs(weight), 4, 0, output_value);
+  dtostrf(weight, 4, 0, output_value);
   lcd.print(output_value);
   lcd.print("g");
 
@@ -128,14 +128,14 @@ void writelcd() {
   lcd.setCursor(0, 1);
   lcd.print("Portns:");
   //FORMAT PORTIONS
-  dtostrf(abs(weight / scale.getPortionsPerKG()) , 6, 1, output_value);
+  dtostrf(absolute(weight / scale.getPortionsPerKG()) , 6, 1, output_value);
   lcd.print(output_value);
   lcd.setCursor(0, 2);
   lcd.print("Price:");
   lcd.write(byte(3));
   //lcd.print(" ");
   //FORMAT PRICE
-  dtostrf(abs(scale.getTotalPrice()), 6, 2, output_value);
+  dtostrf(absolute(scale.getTotalPrice()), 6, 2, output_value);
   lcd.print(output_value);
 
   lcd.setCursor(0, 3);
@@ -143,7 +143,7 @@ void writelcd() {
   lcd.write(byte(3));
   //lcd.print(" ");
   //FORMAT TOTAL
-  dtostrf(abs(total), 6, 2, output_value);
+  dtostrf(absolute(total), 6, 2, output_value);
   lcd.print(output_value);
 
   //Name code
@@ -243,6 +243,15 @@ void readNFC() {
         }
       }
     }
+  }
+}
+
+float absolute(float value){
+  if (value >= 0){
+    return value;
+  }
+  else{
+    return(0);
   }
 }
 
