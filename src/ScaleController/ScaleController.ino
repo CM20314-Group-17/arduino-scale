@@ -120,7 +120,7 @@ void writelcd() {
   char output_value[5];
   int weight = scale.getTotalWeight();
   //if (abs(weight) < 1.0) weight = 0;  // little cheat to smooth out weight
-  dtostrf(weight, 4, 0, output_value);
+  dtostrf(absolute(weight), 4, 0, output_value);
   lcd.print(output_value);
   lcd.print("g");
 
