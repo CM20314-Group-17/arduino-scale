@@ -59,10 +59,20 @@ float Scale::getPricePer100()
 
 float Scale::getTotalPrice()
 {
+<<<<<<< Updated upstream
   return (getTotalWeight() / 100) * getPricePer100();
+=======
+  return getTotalWeight() * getPricePerKG() * 0.1; //Should be pprice per 100g #todo 
+>>>>>>> Stashed changes
 }
 
 float Scale::getTotalPortions()
 {
+<<<<<<< Updated upstream
   return getTotalWeight() / getGramsPerPortion();
 }
+=======
+  return ((getTotalWeight() / getPortionsPerKG)) ;
+}
+
+>>>>>>> Stashed changes
