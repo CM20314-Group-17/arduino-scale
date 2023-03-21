@@ -14,10 +14,10 @@ class Scale
     float getTotalPrice();            // get price of detected weight
     float getTotalPortions();         // get portions in detected weight
 
-    void setPortionsPerKG(float portions); // specify portion size to use for calculations
-    float getPortionsPerKG();           // get portion size currently being used for calculations
-    void setPricePerKG(float price); // specify price per gram to use for calculations
-    float getPricePerKG();                  // get price per gram currently being used for calculations
+    void setGramsPerPortion(float portions); // specify portion size to use for calculations
+    float getGramsPerPortion();           // get portion size currently being used for calculations
+    void setPricePer100(float price); // specify price per gram to use for calculations
+    float getPricePer100();                  // get price per gram currently being used for calculations
 
     void tare();                      // blocking tare
     void tareNoDelay();               // nonblocking tare
@@ -28,8 +28,8 @@ class Scale
     const float GRAMS_PER_OZ = 28.3495;
     const int DEFAULT_INIT_TIME = 1000;
     const float DEFAULT_CAL_FACTOR = 0.42;
-    float currentPortionsPerKG = 1.0;
-    float currentPricePerKG = 1.0;
+    float currentGramsPerPortion = 1.0;
+    float currentPricePer100 = 1.0;
 };
 
 #endif
