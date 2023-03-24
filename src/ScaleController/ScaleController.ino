@@ -247,7 +247,7 @@ void readNFC() {
 }
 
 float absolute(float value){
-  if (value >= 0){
+  if (value > 0){
     return value;
   }
   else{
