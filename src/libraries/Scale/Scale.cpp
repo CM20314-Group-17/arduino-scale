@@ -59,7 +59,7 @@ float Scale::getPricePerKG()
 
 float Scale::getTotalPrice()
 {
-  return getTotalWeight() * getPricePerKG() * 0.1; //Should be pprice per 100g #todo 
+  return getTotalWeight() * getPricePerKG() * 0.01; //Should be pprice per 100g #todo 
 }
 
 float Scale::getTotalPortions()
