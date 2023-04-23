@@ -13,8 +13,9 @@ Scale scale(5, 6);
 
 // CONSTANTS
 const int NAMECODE_LENGTH = 13;
-const int ZERO_PIN = 2;
+const int ZERO_PIN = 4;
 const int RIGHT_PIN = 3;
+const int DISPLAY_TYPE_PIN = 2;
 const int DEBOUNCE_TIME = 100;
 const int NFC_READ_FREQUENCY = 30;  // do nfc read every this many loops as it's very slow
 const int TARE_COOLDOWN = 15; // loops until you can tare again
@@ -42,11 +43,14 @@ int this_item = 0;
 int nfc_read_timer = 0; // timer for when nfc read is called
 int tare_timer = 0;
 int prices[32];
+int display_mode = 0;
+bool display_clear_flag = false;
 float total;
 
 
 unsigned long debounce_time_right = 0; //Long because we need space to store millis
 unsigned long debounce_time_zero = 0; // ^^
+unsigned long debounce_time_display_cycle = 0; // ^^
 
 
 void setup() {
@@ -60,7 +64,9 @@ void setup() {
   pinMode(ZERO_PIN, INPUT);
   // zeroing the scale during an interrupt does not work - now it just simply checks the button in loop()
   pinMode(RIGHT_PIN, INPUT);
+  pinMode(DISPLAY_TYPE_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(RIGHT_PIN), next_item, RISING);
+  attachInterrupt(digitalPinToInterrupt(DISPLAY_TYPE_PIN), cycle_display_mode, RISING);
 
 
   //Variable initalisation
@@ -81,6 +87,15 @@ void loop() {
   writelcd();
   readZeroButtonLoop();
   readNFCLoop();
+}
+
+void cycle_display_mode() {
+  if ((millis() - debounce_time_display_cycle) > DEBOUNCE_TIME) { //might need to change this based on physical config
+    display_mode++;
+    if (display_mode == 3) display_mode = 0;
+    display_clear_flag = true;
+  }
+  debounce_time_display_cycle = millis();
 }
 
 void readNFCLoop() {
@@ -112,7 +127,10 @@ void tare() {
 
 
 void writelcd() {
-
+  if (display_clear_flag) {
+    lcd.clear();
+    display_clear_flag = false;
+  }
   //Weight
   lcd.setCursor(0, 0); //character x on line y
   lcd.print("Weight: ");
@@ -121,30 +139,39 @@ void writelcd() {
   int weight = scale.getTotalWeight();
   //if (abs(weight) < 1.0) weight = 0;  // little cheat to smooth out weight
   dtostrf(absolute(weight), 4, 0, output_value);
+  //dtostrf((float)display_mode, 4, 0, output_value);
   lcd.print(output_value);
   lcd.print("g");
 
-  //Portions
-  lcd.setCursor(0, 1);
-  lcd.print("Portns:");
-  //FORMAT PORTIONS
-  dtostrf(absolute(weight / scale.getPortionsPerKG()) , 6, 1, output_value);
-  lcd.print(output_value);
-  lcd.setCursor(0, 2);
-  lcd.print("Price:");
-  lcd.write(byte(3));
-  //lcd.print(" ");
-  //FORMAT PRICE
-  dtostrf(absolute(scale.getTotalPrice()), 6, 2, output_value);
-  lcd.print(output_value);
+  if (display_mode < 2) {
 
-  lcd.setCursor(0, 3);
-  lcd.print("Total:");
-  lcd.write(byte(3));
-  //lcd.print(" ");
-  //FORMAT TOTAL
-  dtostrf(absolute(total), 6, 2, output_value);
-  lcd.print(output_value);
+    lcd.setCursor(0, 2);
+    lcd.print("Price:");
+    lcd.write(byte(3));
+    //lcd.print(" ");
+    //FORMAT PRICE
+    dtostrf(absolute(scale.getTotalPrice()), 6, 2, output_value);
+    lcd.print(output_value);
+
+    lcd.setCursor(0, 3);
+    lcd.print("Total:");
+    lcd.write(byte(3));
+    //lcd.print(" ");
+    //FORMAT TOTAL
+    dtostrf(absolute(total), 6, 2, output_value);
+    lcd.print(output_value);
+
+  }
+
+  if (display_mode < 1) {
+    //Portions
+    lcd.setCursor(0, 1);
+    lcd.print("Portns:");
+    //FORMAT PORTIONS
+    dtostrf(absolute(weight / scale.getPortionsPerKG()) , 6, 1, output_value);
+    lcd.print(output_value);
+  }
+
 
   //Name code
   lcd.setCursor(14, 0);
