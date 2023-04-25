@@ -19,6 +19,7 @@ const int DISPLAY_TYPE_PIN = 2;
 const int DEBOUNCE_TIME = 100;
 const int NFC_READ_FREQUENCY = 30;  // do nfc read every this many loops as it's very slow
 const int TARE_COOLDOWN = 15; // loops until you can tare again
+const char default_namecode_text[] = "ITEM  CODE  ";
 byte gbpSign[8] = {
   0b00110,
   0b01001,
@@ -37,6 +38,7 @@ NfcAdapter nfc = NfcAdapter(interface);
 
 
 //Environment variables
+
 char current_name_code[NAMECODE_LENGTH];
 float weight_bias = 0;  //Set when we zero, then take away from all weight measurements
 int this_item = 0;
@@ -46,7 +48,6 @@ int prices[32];
 int display_mode = 0;
 bool display_clear_flag = false;
 float total;
-
 
 unsigned long debounce_time_right = 0; //Long because we need space to store millis
 unsigned long debounce_time_zero = 0; // ^^
@@ -70,7 +71,9 @@ void setup() {
 
 
   //Variable initalisation
-  strcpy(current_name_code, "NAME  CODE  ");
+  //strcpy(current_name_code, "NAME  CODE  ");
+  strcpy(current_name_code, default_namecode_text);
+  
 
   //NFClcd.setCursor(3, 0);
   nfc.begin();
@@ -131,8 +134,14 @@ void writelcd() {
     lcd.clear();
     display_clear_flag = false;
   }
+
+  //display_mode
+  //0 = show everything
+  //1 = hide portions
+  //2 = hide total
+
   //Weight
-  lcd.setCursor(0, 0); //character x on line y
+  lcd.setCursor(0, 0 + (int)(display_mode == 2)); //character x on line y
   lcd.print("Weight: ");
   //FORMAT WEIGHT
   char output_value[5];
@@ -174,19 +183,22 @@ void writelcd() {
 
 
   //Name code
-  lcd.setCursor(14, 0);
+  int namecode_line = 0;
+  lcd.setCursor(14, namecode_line);
   for (int x  = 0; x < NAMECODE_LENGTH - 1; x ++) {
     if (x < 6) {
       lcd.print(current_name_code[x]);
     }
     else if (x == 6) {
-      lcd.setCursor(14, 1);
+      lcd.setCursor(14, namecode_line + 1);
       lcd.print(current_name_code[x]);
     }
     else {
       lcd.print(current_name_code[x]);
     }
   }
+
+  
 
   //AMOUNT THROUGH
   lcd.setCursor(14, 3);
@@ -196,6 +208,7 @@ void writelcd() {
   lcd.print(this_item);
   lcd.print("/");
   lcd.print("32");
+  
 }
 
 
@@ -210,7 +223,7 @@ void next_item() {
     //check if we are at last item
     if (this_item < 32) {
       this_item++;
-      strcpy(current_name_code, "SELECTITEM  ");
+      strcpy(current_name_code, default_namecode_text);
       total = total + scale.getTotalPrice();
       scale.setPricePerKG( 0.0);
       scale.setPortionsPerKG(1.0);
